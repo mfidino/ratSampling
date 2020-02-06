@@ -2,8 +2,8 @@
 #  want to collect a spatially balanced sample.
 
 # I've already got a lot of code to make a raster from which to sample from.
-source("./Documents/GitHub/conflict/sim_utility.R")
-source("./Documents/GitHub/conflict/plot_utility.R")
+source("../conflict/sim_utility.R")
+source("../conflict/plot_utility.R")
 
 packs <- c("raster", "mvtnorm", "scales",
            "coda", "rgeos", "sp", "BalancedSampling")
