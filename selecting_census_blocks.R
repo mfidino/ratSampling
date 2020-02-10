@@ -33,14 +33,24 @@ x <- as.matrix(
 
 # calculate the density within this multivariate space
 mv_density <- ks::kde(
-  x = x
+  x = as.matrix(x)
 )
 
 # take a look at this
-plot(
-  mv_density
-)
-
+if(
+  do_plot
+){
+  plot(
+    mv_density,
+    drawpoints = TRUE
+  )
+  invisible(
+    readline(
+      prompt="Press [enter] to continue"
+    )
+  )
+}
+  
 # calculate the density at the specific points we have
 data_density <- ks::kde(
   x=x,
@@ -63,7 +73,8 @@ our_sample <- rep(
   n_samples
 )
 
-# Doing this in iterations
+# Doing this in iterations to make certain
+#  we have an appropriate number of samples.
 iter <- 1
 while(
   any(
@@ -72,6 +83,7 @@ while(
     )
   )
 ){
+  # set seed for reproducibility
   my_seed <- as.numeric(
     Sys.time()
   )
@@ -80,12 +92,14 @@ while(
     my_seed
   )
   
+  # collect sample based on multivariate
+  #  inclusion probabilities
   our_sample <- BalancedSampling::cube( 
     inc_prob,
     as.matrix(dat)
   )[1:n_samples]
-  
-iter <- iter+1
+   
+  iter <- iter+1
   if(
     iter > 100
     ){
@@ -95,74 +109,196 @@ iter <- iter+1
 
 sample_df <- dat[our_sample,]
 
-plot(
-  dat$INTPTLAT ~ dat$INTPTLON,
-  xlab = "Longitude",
-  ylab = "Latitude",
-  cex = 2,
-  las = 1,
-  bty = 'l'
-)
-
-points(
-  sample_df$INTPTLAT ~ sample_df$INTPTLON,
-  cex = 2,
-  pch = 21,
-  bg = "black"
-)
-
-legend(
-  "topleft",
-  pch = c(
-    1,
-    21
-  ),
-  pt.cex = 2,
-  legend = c(
-    "Not sampled",
-    "Sampled"),
-  pt.bg = c(
-    "white",
-    "black"
+if(
+  do_plot
+  ){
+  plot(
+    dat$INTPTLAT ~ dat$INTPTLON,
+    xlab = "Longitude",
+    ylab = "Latitude",
+    cex = 2,
+    las = 1,
+    bty = 'l'
+  )
+  
+  points(
+    sample_df$INTPTLAT ~ sample_df$INTPTLON,
+    cex = 2,
+    pch = 21,
+    bg = "black"
+  )
+  
+  legend(
+    "topleft",
+    pch = c(
+      1,
+      21
     ),
-  bty = "n"
-)
+    pt.cex = 2,
+    legend = c(
+      "Not sampled",
+      "Sampled"),
+    pt.bg = c(
+      "white",
+      "black"
+      ),
+    bty = "n"
+  )
+  invisible(
+    readline(
+      prompt="Press [enter] to continue"
+    )
+  )
 
-windows(height = 5, width = 10)
-par(mfrow = c(1,2))
-hist(hey$ratcomplaints, xlim = range(dat$ratcomplaints))
-hist(dat$ratcomplaints)
-hist(hey$medincome, xlim = range(dat$medincome))
-hist(dat$medincome)
-hist(hey$popdens, xlim = range(dat$popdens))
-hist(dat$popdens)
+  round_choose <- function(x, round_to, dir = "up") {
+    if(dir == "up") {  ##ROUND UP
+      x + (roundTo - x %% roundTo)
+    } else {
+      if(dir == "down") {  ##ROUND DOWN
+        x - (x %% roundTo)
+      }
+    }
+  }
+  windows(height = 15, width = 10, restoreConsole = TRUE)
+  par(mfrow = c(3,2))
+  hist(
+    sample_df$ratcomplaints,
+    xlim = c(
+      # Minimum
+      round_choose(
+        min(
+          dat$ratcomplaints
+        ),
+        100,
+        "down"),
+      round_choose(
+        max(
+          dat$ratcomplaints
+        ),
+        100,
+        "up"
+      )
+    ),
+    xlab = "rat complaints",
+    main = "sample"
+  )
+  hist(
+    dat$ratcomplaints,
+    xlim = c(
+      # Minimum
+      round_choose(
+        min(
+          dat$ratcomplaints
+        ),
+        100,
+        "down"),
+      round_choose(
+        max(
+          dat$ratcomplaints
+        ),
+        100,
+        "up"
+      )
+    ),
+    xlab = "rat complaints",
+    main = "data"
+  )
+  hist(
+    sample_df$medincome,
+    xlim = c(
+      # Minimum
+      round_choose(
+        min(
+          dat$medincome
+        ),
+        1000,
+        "down"
+        ),
+      round_choose(
+        max(
+          dat$medincome
+        ),
+        1000,
+        "up"
+      )
+    ),
+    xlab = "median income",
+    main = "sample"
+  )
+  hist(
+    dat$medincome,
+    xlim = c(
+      # Minimum
+      round_choose(
+        min(
+          dat$medincome
+        ),
+        1000,
+        "down"
+        ),
+      round_choose(
+        max(
+          dat$medincome
+        ),
+        1000,
+        "up"
+      )
+    ),
+    xlab = "median income",
+    main = "data"
+  )
+  hist(
+    sample_df$popdens,
+    xlim = c(
+      # Minimum
+      round_choose(
+        min(
+          dat$popdens
+        ),
+        1000,
+        "down"
+        ),
+      round_choose(
+        max(
+          dat$popdens
+        ),
+        1000,
+        "up"
+      )
+    ),
+    xlab = "population density",
+    main = "sample"
+  )
+  hist(
+    dat$popdens,
+    xlim = c(
+      # Minimum
+      round_choose(
+        min(
+          dat$popdens
+        ),
+        100,
+        "down"
+        ),
+      round_choose(
+        max(
+          dat$popdens
+        ),
+        100,
+        "up"
+      )
+    ),
+    xlab = "population density",
+    main = "data"
+  )
+}  
 
 cor(hey$popdens, hey$ratcomplaints)
 cor(hey$popdens, hey$medincome)
 cor(hey$ratcomplaints, hey$medincome)
-plot(hey$ratcomplaints ~ hey$medincome)
 
-apply(hey2, 2, mean)
+
+apply(hey, 2, mean)
 apply(dat, 2, mean)
-plot(hey2$ratcomplaints ~ hey2$medincome)
-plot(hey2$ratcomplaints ~ hey2$popdens)
-plot(hey2$medincome ~ hey2$popdens)
 
-hist(dat$ratcomplaints)
-hist(hey$ratcomplaints, main = "rat complaints, rare upweight")
-hist(hey2$ratcomplaints, main = "rat complaints, no upweight", xlim = c(0,600))
-hist(hey2$ratcomplaints)
-hist(hey2$medincome)
-hist(hey2$popdens)
-hist(dat$popdens)
-
-plot(dat$INTPTLON ~ dat$INTPTLAT)
-points(hey$INTPTLON ~ hey$INTPTLAT, pch = 21, bg = "red")
-
-
-# get covars
-x <- test$x[,1:2]
-
-yo <- cbind(dat[,1:2], x)
-
-plot(dat$medincome ~ dat$popdens)
+write.csv()
