@@ -1,7 +1,6 @@
 library(BalancedSampling)
 library(ks)
 
-
 # Read in the data
 dat <- read.csv(
   "./data/40th_ward.csv",
@@ -19,19 +18,34 @@ dat <- dat[,c(
 ]
 
 # get complete cases
-dat <- dat[complete.cases(dat),]
+dat <- dat[
+  complete.cases(dat),
+]
 
 # get the covariates
-x <- as.matrix(dat[,c("medincome", "ratcomplaints", "popdens")])
+x <- as.matrix(
+  dat[,c(
+    "medincome",
+    "ratcomplaints",
+    "popdens")
+  ]
+)
 
 # calculate the density within this multivariate space
-mv_density <- kde(x = x)
+mv_density <- ks::kde(
+  x = x
+)
 
 # take a look at this
-plot(mv_density)
+plot(
+  mv_density
+)
 
 # calculate the density at the specific points we have
-data_density <- kde(x=x, eval.points = x)
+data_density <- ks::kde(
+  x=x,
+  eval.points = x
+)
 
 # calculate the inverse of this density to increase rare points
 inverse_density <- 1 / data_density$estimate
@@ -43,20 +57,76 @@ n_samples <- 12
 
 inc_prob <- n_samples * (inverse_density / sum(inverse_density))
 
-# take sample
-our_sample <- cube( 
-  inc_prob,
-  as.matrix(dat)
-)[1:n]
-#longshot <- cube(rep(n/N, N), as.matrix(dat))[1:n])
+# take sample, starting with all NA
+our_sample <- rep(
+  NA,
+  n_samples
+)
 
-hey <- dat[our_sample,]
-#apply(hey, 2, mean)
-#apply(dat, 2, mean)
-#plot(hey$ratcomplaints ~ hey$medincome)
-#plot(hey$ratcomplaints ~ hey$popdens)
-#plot(hey$medincome ~ hey$popdens)
-#plot(dat$ratcomplaints ~ dat$medincome)
+# Doing this in iterations
+iter <- 1
+while(
+  any(
+    is.na(
+      our_sample
+    )
+  )
+){
+  my_seed <- as.numeric(
+    Sys.time()
+  )
+  
+  set.seed(
+    my_seed
+  )
+  
+  our_sample <- BalancedSampling::cube( 
+    inc_prob,
+    as.matrix(dat)
+  )[1:n_samples]
+  
+iter <- iter+1
+  if(
+    iter > 100
+    ){
+    stop("Cannot find balanced sample.")
+  }
+}
+
+sample_df <- dat[our_sample,]
+
+plot(
+  dat$INTPTLAT ~ dat$INTPTLON,
+  xlab = "Longitude",
+  ylab = "Latitude",
+  cex = 2,
+  las = 1,
+  bty = 'l'
+)
+
+points(
+  sample_df$INTPTLAT ~ sample_df$INTPTLON,
+  cex = 2,
+  pch = 21,
+  bg = "black"
+)
+
+legend(
+  "topleft",
+  pch = c(
+    1,
+    21
+  ),
+  pt.cex = 2,
+  legend = c(
+    "Not sampled",
+    "Sampled"),
+  pt.bg = c(
+    "white",
+    "black"
+    ),
+  bty = "n"
+)
 
 windows(height = 5, width = 10)
 par(mfrow = c(1,2))
