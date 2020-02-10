@@ -1,4 +1,6 @@
 library(BalancedSampling)
+library(ks)
+
 
 # Read in the data
 dat <- read.csv(
@@ -7,90 +9,48 @@ dat <- read.csv(
 )
 
 # reduce down to the columns we need
-dat <- dat[,c("INTPTLAT", "INTPTLON", "medincome", "ratcomplaints", "popdens")]
+dat <- dat[,c(
+  "INTPTLAT",
+  "INTPTLON",
+  "medincome",
+  "ratcomplaints",
+  "popdens"
+  )
+]
 
 # get complete cases
 dat <- dat[complete.cases(dat),]
 
-rdat <- dat
+# get the covariates
+x <- as.matrix(dat[,c("medincome", "ratcomplaints", "popdens")])
 
-calc_rarity <- function(x){
-  
-  # Calculate the density
-  dens <- density(x, n=diff(range(x)),
-                  from = min(x),
-                  to = max(x))
-  
-  # Get density estimate of the data points
-  data_density <- approx(dens$x, dens$y, x)$y
-  
-  # take the inverse of this to upweight rare values
-  inverse_density <- 1 / data_density
-  
-  # return thse values
-  return(inverse_density)
-  
-}
+# calculate the density within this multivariate space
+mv_density <- kde(x = x)
 
+# take a look at this
+plot(mv_density)
 
+# calculate the density at the specific points we have
+data_density <- kde(x=x, eval.points = x)
 
-calc_rarity(dat$medincome)
-dens <- density(x, n=diff(range(x)),
-                from = min(x),
-                to = max(x))
-dens$x <- floor(dens$x)
-x %in% dens$x
+# calculate the inverse of this density to increase rare points
+inverse_density <- 1 / data_density$estimate
 
-yo <- dens$y[dens$x %in% x]
+# convert to inclusion probability. Divide by sum and then multiply by
+#  number of samples we want.
 
-sum(dens$y)*diff(dens$x[1:2])
+n_samples <- 12
 
-calc_rarity <- function(x){
-  x <- scale(x)
-  mu <- mean(x)
-  sigma <- sd(x)
-  to_return <- dnorm(x, mu, sigma)
-  to_return <- 1 / to_return
-  return(log(to_return))
-}
+inc_prob <- n_samples * (inverse_density / sum(inverse_density))
 
-x <- dat[,3:5]
+# take sample
+our_sample <- cube( 
+  inc_prob,
+  as.matrix(dat)
+)[1:n]
+#longshot <- cube(rep(n/N, N), as.matrix(dat))[1:n])
 
-j3 <- apply(x, 2,calc_rarity2 )
-
-
-# use principal components analsyis?
-test <- prcomp(dat[,3:5], scale. = TRUE)
-
-y <- as.matrix(scale(dat[,3:5]))
-
-x <- test$x[,1:2]
-x <- dat[,3:5]
-x <- scale(x)
-j <- apply(x, 2, function(x) as.numeric(cut(x, 7)))
-
-
-make_thing <- function(x) {
-  tmp <- table(x)
-  val <- 1 / (tmp / sum(tmp))
-  to_return <- unname(val[x])
-}
-
-j3 <- apply(j, 2, make_thing)
-#j3 <- apply(j3, 2, function(x) x / sum(x))
-j4 <- rowSums(j3)
-j4 <- (j4 / sum(j4)) * 13
-
-n <- 12
-N <- nrow(dat)
-
-set.seed(150)
-longshot <- cube( j4, as.matrix(dat))[1:12]
-
-l2 <- cube(rep(n/N, N), as.matrix(dat))
-
-hey <- dat[longshot,]
-hey2 <- dat[l2,]
+hey <- dat[our_sample,]
 #apply(hey, 2, mean)
 #apply(dat, 2, mean)
 #plot(hey$ratcomplaints ~ hey$medincome)
@@ -107,6 +67,10 @@ hist(dat$medincome)
 hist(hey$popdens, xlim = range(dat$popdens))
 hist(dat$popdens)
 
+cor(hey$popdens, hey$ratcomplaints)
+cor(hey$popdens, hey$medincome)
+cor(hey$ratcomplaints, hey$medincome)
+plot(hey$ratcomplaints ~ hey$medincome)
 
 apply(hey2, 2, mean)
 apply(dat, 2, mean)
