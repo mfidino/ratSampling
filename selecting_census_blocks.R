@@ -1,3 +1,13 @@
+################################################
+#
+# Selecting census blocks to sample within wards
+#
+#  Code written by M. Fidino 2/10/2020 mdy
+#
+################################################
+
+
+# load packages
 library(BalancedSampling)
 library(ks)
 
@@ -159,12 +169,14 @@ if(
       }
     }
   }
+  
   windows(height = 15, width = 10, restoreConsole = TRUE)
-  par(mfrow = c(3,2))
+  par(
+    mfrow = c(3,2)
+  )
   hist(
     sample_df$ratcomplaints,
     xlim = c(
-      # Minimum
       round_choose(
         min(
           dat$ratcomplaints
@@ -185,7 +197,6 @@ if(
   hist(
     dat$ratcomplaints,
     xlim = c(
-      # Minimum
       round_choose(
         min(
           dat$ratcomplaints
@@ -206,7 +217,6 @@ if(
   hist(
     sample_df$medincome,
     xlim = c(
-      # Minimum
       round_choose(
         min(
           dat$medincome
@@ -228,7 +238,6 @@ if(
   hist(
     dat$medincome,
     xlim = c(
-      # Minimum
       round_choose(
         min(
           dat$medincome
@@ -293,12 +302,3 @@ if(
   )
 }  
 
-cor(hey$popdens, hey$ratcomplaints)
-cor(hey$popdens, hey$medincome)
-cor(hey$ratcomplaints, hey$medincome)
-
-
-apply(hey, 2, mean)
-apply(dat, 2, mean)
-
-write.csv()
