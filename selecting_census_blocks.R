@@ -14,17 +14,21 @@ dat <- dat[complete.cases(dat),]
 
 rdat <- dat
 
-calc_rarity2 <- function(x){
-  #x <- floor(x)
+calc_rarity <- function(x){
+  
+  # Calculate the density
   dens <- density(x, n=diff(range(x)),
                   from = min(x),
                   to = max(x))
-  dens$x <- floor(dens$x)
-  x %in% dens$x
   
-  yo <- 1/ dens$y[dens$x %in% x]
+  # Get density estimate of the data points
+  data_density <- approx(dens$x, dens$y, x)$y
   
-  return(unlist(yo))
+  # take the inverse of this to upweight rare values
+  inverse_density <- 1 / data_density
+  
+  # return thse values
+  return(inverse_density)
   
 }
 
