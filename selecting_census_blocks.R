@@ -6,7 +6,6 @@
 #
 ################################################
 
-
 # load packages
 library(BalancedSampling)
 library(ks)
@@ -161,11 +160,11 @@ if(
   )
 
   round_choose <- function(x, round_to, dir = "up") {
-    if(dir == "up") {  ##ROUND UP
-      x + (roundTo - x %% roundTo)
+    if(dir == "up") {  
+      x + (round_to - x %% round_to)
     } else {
-      if(dir == "down") {  ##ROUND DOWN
-        x - (x %% roundTo)
+      if(dir == "down") { 
+        x - (x %% round_to)
       }
     }
   }
@@ -301,4 +300,11 @@ if(
     main = "data"
   )
 }  
+
+
+cor(sample_df$medincome, sample_df$ratcomplaints)
+cor(sample_df$medincome, sample_df$popdens)
+cor(sample_df$popdens, sample_df$ratcomplaints)
+
+plot(dat$popdens, dat$ratcomplaints)
 
