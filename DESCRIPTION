@@ -1,0 +1,17 @@
+Package: ratSampling
+Title: A tool to create spatially balanced samples
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Mason",
+           family = "Fidino",
+           role = c("aut", "cre"),
+           email = "mfidino@lpzoo.org",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+Imports:
+    ks (>= 1.11.6),
+    BalancedSampling (>= 1.5.5)
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.0.2
