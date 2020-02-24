@@ -156,7 +156,7 @@ sample_ward <- function(
 
     iter <- iter+1
     if(
-      iter > 300
+      iter > 1e5
     ){
       stop("Cannot find balanced sample.")
     }
