@@ -48,7 +48,7 @@ library(ks)
 #'   my_samples <- sample_ward(
 #'     x = data,
 #'     n = 12,
-#'     coord_df = data[,c("lat", "lon")],
+#'     coord_df = c("lat", "lon"),
 #'     covar_names = c("medincome", "ratcomplaints", "popdens")
 #'     )
 #' }
