@@ -10,14 +10,74 @@
 library(BalancedSampling)
 library(ks)
 
+#' sample locations within a ward
+#'
+#' \code{sample_ward} generates a spatially balanced sample.
+#'
+#' @param x A data.frame of the population you wish to sample from, where each
+#'            row is a possible sampling location.
+#' @param n The number of points to sample
+#' @param coord_names Either a numeric vector that describes the columns of the
+#'                      coordinates you wish to include as auxilary variables
+#'                      from the data.frame x or a character vector of the
+#'                      column names.
+#' @param covar_names Either a numeric vector that describes the columns of the
+#'                      covariates you wish to include as auxilary variables
+#'                      from the data.frame x or a character vector of the
+#'                      column names.
+#' @param seed  An optional value to set the seed for sampling. If NULL, this
+#'                will be generated for you.
+
+#'
+#' @return  A named list. The first object 'row_indices' indicates the rows
+#'            from data.frame x that represent a balanced sample. The second
+#'            object 'seed' is the seed used to generate the balanced sample.
+#'
+#' @importFrom BalancedSampling cube
+#' @importFrom ks kde
+#' @export
+#'
+#' @examples
+#'
+#' \dontrun{
+#'   data <- read.csv(
+#'     "./data/my_ward_data.csv",
+#'     stringsAsFactors = FALSE
+#'   )
+#'
+#'   my_samples <- sample_ward(
+#'     x = data,
+#'     n = 12,
+#'     coord_df = data[,c("lat", "lon")],
+#'     covar_names = c("medincome", "ratcomplaints", "popdens")
+#'     )
+#' }
+#'
 sample_ward <- function(
   x,
   n,
-  covar_names = NULL
+  coord_names,
+  covar_names,
+  seed = NULL
 ){
+  x <- x[
+    complete.cases(x),
+  ]
 
 
-  if(!is.null(covar_names)){
+  # If it's numeric just do the subset
+  if(is.numeric(coord_names)){
+    x_coord <- as.matrix(x[,coord_names])
+  }
+  # If it's characters
+  if(is.character(coord_names)){
+    if(!all(coord_names %in% colnames(x))){
+      err <- covar_names[which(!coord_names %in% colnames(x))]
+      warning(paste0("Column name: '", err, "' not in x."))
+    }
+    x_coord <- as.matrix(x[,which(colnames(x) %in% coord_names)])
+  }
+
     # If it's numeric just do the subset
   if(is.numeric(covar_names)){
     x_cov <- as.matrix(x[,covar_names])
@@ -29,10 +89,10 @@ sample_ward <- function(
       warning(paste0("Column name: '", err, "' not in x."))
     }
     x_cov <- as.matrix(x[,which(colnames(x) %in% covar_names)])
-  } else {
-    x_cov <- as.matrix(x)
   }
-  }
+
+
+
 
   if(ncol(x_cov) > 3){
     stop("x can only have a maximum of 3 columns.
@@ -40,10 +100,6 @@ sample_ward <- function(
          with 'covar_names' or subset the input to
          x before.")
   }
-  # get complete cases
-  x_cov <- x_cov[
-    complete.cases(x_cov),
-    ]
 
   # calculate the density within this multivariate space
   mv_density <- ks::kde(
@@ -84,7 +140,9 @@ sample_ward <- function(
     my_seed <- as.numeric(
       Sys.time()
     )
-
+    if(!is.null(seed) & iter == 1) {
+      my_seed <- seed
+    }
     set.seed(
       my_seed
     )
@@ -93,12 +151,12 @@ sample_ward <- function(
     #  inclusion probabilities
     our_sample <- BalancedSampling::cube(
       inc_prob,
-      as.matrix(x_cov)
+      cbind(x_coord, x_cov)
     )[1:n]
 
     iter <- iter+1
     if(
-      iter > 100
+      iter > 300
     ){
       stop("Cannot find balanced sample.")
     }
@@ -110,4 +168,5 @@ sample_ward <- function(
  return(to_return)
 
 }
+
 
