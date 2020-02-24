@@ -6,9 +6,6 @@
 #
 ################################################
 
-# load packages
-library(BalancedSampling)
-library(ks)
 
 #' sample locations within a ward
 #'
